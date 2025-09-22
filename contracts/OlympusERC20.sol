@@ -10,12 +10,12 @@ import "./interfaces/IERC20Permit.sol";
 import "./types/ERC20Permit.sol";
 import "./types/OlympusAccessControlled.sol";
 
-contract OlympusERC20Token is ERC20Permit, IOHM, OlympusAccessControlled {
+contract PonziERC20 is ERC20Permit, IOHM, OlympusAccessControlled {
     using SafeMath for uint256;
 
     constructor(address _authority)
-        ERC20("Olympus", "OHM", 9)
-        ERC20Permit("Olympus")
+        ERC20("Ponzi", "PONZI", 9)
+        ERC20Permit("Ponzi")
         OlympusAccessControlled(IOlympusAuthority(_authority))
     {}
 

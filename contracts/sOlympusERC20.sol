@@ -10,7 +10,7 @@ import "./interfaces/IgOHM.sol";
 import "./interfaces/IsOHM.sol";
 import "./interfaces/IStaking.sol";
 
-contract sOlympus is IsOHM, ERC20Permit {
+contract sPonzi is IsOHM, ERC20Permit {
     /* ========== DEPENDENCIES ========== */
 
     using SafeMath for uint256;
@@ -71,7 +71,7 @@ contract sOlympus is IsOHM, ERC20Permit {
 
     /* ========== CONSTRUCTOR ========== */
 
-    constructor() ERC20("Staked OHM", "sOHM", 9) ERC20Permit("Staked OHM") {
+    constructor() ERC20("Staked Ponzi", "sPONZI", 9) ERC20Permit("Staked Ponzi") {
         initializer = msg.sender;
         _totalSupply = INITIAL_FRAGMENTS_SUPPLY;
         _gonsPerFragment = TOTAL_GONS.div(_totalSupply);

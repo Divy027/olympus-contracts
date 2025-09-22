@@ -1,3 +1,4 @@
+
 import "@typechain/hardhat";
 import "@nomiclabs/hardhat-ethers";
 import "@nomiclabs/hardhat-waffle";
@@ -23,6 +24,8 @@ const chainIds = {
     mainnet: 1,
     rinkeby: 4,
     ropsten: 3,
+    "base-sepolia": 84532,
+    "bnb-testnet": 97
 };
 
 // Ensure that we have all the environment variables we need.
@@ -31,7 +34,7 @@ const privateKey = process.env.PRIVATE_KEY ?? "NO_PRIVATE_KEY";
 const alchemyApiKey = process.env.ALCHEMY_API_KEY ?? "NO_ALCHEMY_API_KEY";
 
 function getChainConfig(network: keyof typeof chainIds): NetworkUserConfig {
-    const url = `https://eth-${network}.alchemyapi.io/v2/${alchemyApiKey}`;
+    const url = `https://${network}.g.alchemy.com/v2/${alchemyApiKey}`;
     return {
         accounts: [`${privateKey}`],
         chainId: chainIds[network],
@@ -55,9 +58,11 @@ const config: HardhatUserConfig = {
             chainId: chainIds.hardhat,
         },
         // Uncomment for testing. Commented due to CI issues
-        mainnet: getChainConfig("mainnet"),
+        //mainnet: getChainConfig("mainnet"),
         // rinkeby: getChainConfig("rinkeby"),
         // ropsten: getChainConfig("ropsten"),
+        baseSepolia: getChainConfig("base-sepolia"),
+        bnb: getChainConfig("bnb-testnet")
     },
     paths: {
         artifacts: "./artifacts",
@@ -150,10 +155,8 @@ const config: HardhatUserConfig = {
             1: "0x245cc372C84B3645Bf0Ffe6538620B04a217988B",
         },
     },
-    typechain: {
-        outDir: "types",
-        target: "ethers-v5",
-    },
+    
+   
     etherscan: {
         apiKey: process.env.ETHERSCAN_API_KEY,
     },

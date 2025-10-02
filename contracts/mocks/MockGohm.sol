@@ -5,12 +5,12 @@ pragma solidity ^0.8.10;
 import {MockERC20} from "./MockERC20.sol";
 
 // TODO fulfills IgOHM but is not inheriting because of dependency issues
-contract MockGOhm is MockERC20 {
+contract MockGPonzi is MockERC20 {
     /* ========== CONSTRUCTOR ========== */
 
     uint256 public immutable index;
 
-    constructor(uint256 _initIndex) MockERC20("Governance OHM", "gOHM", 18) {
+    constructor(uint256 _initIndex) MockERC20("Governance PONZI", "gPONZI", 9) {
         index = _initIndex;
     }
 

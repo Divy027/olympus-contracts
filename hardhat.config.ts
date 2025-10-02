@@ -2,11 +2,10 @@
 import "@typechain/hardhat";
 import "@nomiclabs/hardhat-ethers";
 import "@nomiclabs/hardhat-waffle";
-import "@nomiclabs/hardhat-etherscan";
 import "hardhat-gas-reporter";
 import "solidity-coverage";
 import "@openzeppelin/hardhat-upgrades";
-
+import "@nomicfoundation/hardhat-verify";
 import "hardhat-deploy";
 
 import { resolve } from "path";
@@ -159,7 +158,17 @@ const config: HardhatUserConfig = {
    
     etherscan: {
         apiKey: process.env.ETHERSCAN_API_KEY,
-    },
+        customChains: [
+          {
+            network: "baseSepolia",
+            chainId: 84532,
+            urls: {
+              apiURL: "https://api.etherscan.io/v2/api?chainid=84532",
+              browserURL: "https://sepolia.basescan.org/"
+            }
+          }
+        ]
+      },
     mocha: {
         timeout: 1000000,
     },

@@ -5,8 +5,8 @@ import "./libraries/SafeMath.sol";
 import "./libraries/SafeERC20.sol";
 
 import "./interfaces/IERC20.sol";
-import "./interfaces/IsOHM.sol";
-import "./interfaces/IgOHM.sol";
+import "./interfaces/IsPonzi.sol";
+import "./interfaces/IgPonzi.sol";
 import "./interfaces/IDistributor.sol";
 
 import "./types/OlympusAccessControlled.sol";
@@ -16,8 +16,8 @@ contract OlympusStaking is OlympusAccessControlled {
 
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
-    using SafeERC20 for IsOHM;
-    using SafeERC20 for IgOHM;
+    using SafeERC20 for IsPonzi;
+    using SafeERC20 for IgPonzi;
 
     /* ========== EVENTS ========== */
 
@@ -43,8 +43,8 @@ contract OlympusStaking is OlympusAccessControlled {
     /* ========== STATE VARIABLES ========== */
 
     IERC20 public immutable OHM;
-    IsOHM public immutable sOHM;
-    IgOHM public immutable gOHM;
+    IsPonzi public immutable sOHM;
+    IgPonzi public immutable gOHM;
 
     Epoch public epoch;
 
@@ -68,9 +68,9 @@ contract OlympusStaking is OlympusAccessControlled {
         require(_ohm != address(0), "Zero address: OHM");
         OHM = IERC20(_ohm);
         require(_sOHM != address(0), "Zero address: sOHM");
-        sOHM = IsOHM(_sOHM);
+        sOHM = IsPonzi(_sOHM);
         require(_gOHM != address(0), "Zero address: gOHM");
-        gOHM = IgOHM(_gOHM);
+        gOHM = IgPonzi(_gOHM);
 
         epoch = Epoch({length: _epochLength, number: _firstEpochNumber, end: _firstEpochTime, distribute: 0});
     }

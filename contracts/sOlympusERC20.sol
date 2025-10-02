@@ -6,11 +6,11 @@ import "./libraries/SafeMath.sol";
 
 import "./types/ERC20Permit.sol";
 
-import "./interfaces/IgOHM.sol";
-import "./interfaces/IsOHM.sol";
+import "./interfaces/IgPonzi.sol";
+import "./interfaces/IsPonzi.sol";
 import "./interfaces/IStaking.sol";
 
-contract sPonzi is IsOHM, ERC20Permit {
+contract sPonzi is IsPonzi, ERC20Permit {
     /* ========== DEPENDENCIES ========== */
 
     using SafeMath for uint256;
@@ -47,7 +47,7 @@ contract sPonzi is IsOHM, ERC20Permit {
     uint256 internal INDEX; // Index Gons - tracks rebase growth
 
     address public stakingContract; // balance used to calc rebase
-    IgOHM public gOHM; // additional staked supply (governance token)
+    IgPonzi public gPonzi; // additional staked supply (governance token)
 
     Rebase[] public rebases; // past rebase data
 
@@ -85,11 +85,11 @@ contract sPonzi is IsOHM, ERC20Permit {
         INDEX = gonsForBalance(_index);
     }
 
-    function setgOHM(address _gOHM) external {
+    function setgPonzi(address _gPonzi) external {
         require(msg.sender == initializer, "Initializer:  caller is not initializer");
-        require(address(gOHM) == address(0), "gOHM:  gOHM already set");
-        require(_gOHM != address(0), "gOHM:  gOHM is not a valid contract");
-        gOHM = IgOHM(_gOHM);
+        require(address(gPonzi) == address(0), "gPonzi:  gPonzi already set");
+        require(_gPonzi != address(0), "gPonzi:  gPonzi is not a valid contract");
+        gPonzi = IgPonzi(_gPonzi);
     }
 
     // do this last
@@ -112,7 +112,7 @@ contract sPonzi is IsOHM, ERC20Permit {
     /* ========== REBASE ========== */
 
     /**
-        @notice increases rOHM supply to increase staking balances relative to profit_
+        @notice increases rPonzi supply to increase staking balances relative to profit_
         @param profit_ uint256
         @return uint256
      */
@@ -220,8 +220,8 @@ contract sPonzi is IsOHM, ERC20Permit {
         return true;
     }
 
-    // this function is called by the treasury, and informs sOHM of changes to debt.
-    // note that addresses with debt balances cannot transfer collateralized sOHM
+    // this function is called by the treasury, and informs sPonzi of changes to debt.
+    // note that addresses with debt balances cannot transfer collateralized sPonzi
     // until the debt has been repaid.
     function changeDebt(
         uint256 amount,
@@ -234,7 +234,7 @@ contract sPonzi is IsOHM, ERC20Permit {
         } else {
             debtBalances[debtor] = debtBalances[debtor].sub(amount);
         }
-        require(debtBalances[debtor] <= balanceOf(debtor), "sOHM: insufficient balance");
+        require(debtBalances[debtor] <= balanceOf(debtor), "sPonzi: insufficient balance");
     }
 
     /* ========== INTERNAL FUNCTIONS ========== */
@@ -262,20 +262,20 @@ contract sPonzi is IsOHM, ERC20Permit {
         return gons.div(_gonsPerFragment);
     }
 
-    // toG converts an sOHM balance to gOHM terms. gOHM is an 18 decimal token. balance given is in 18 decimal format.
+    // toG converts an sPonzi balance to gPonzi terms. gPonzi is an 18 decimal token. balance given is in 18 decimal format.
     function toG(uint256 amount) external view override returns (uint256) {
-        return gOHM.balanceTo(amount);
+        return gPonzi.balanceTo(amount);
     }
 
-    // fromG converts a gOHM balance to sOHM terms. sOHM is a 9 decimal token. balance given is in 9 decimal format.
+    // fromG converts a gPonzi balance to sPonzi terms. sPonzi is a 9 decimal token. balance given is in 9 decimal format.
     function fromG(uint256 amount) external view override returns (uint256) {
-        return gOHM.balanceFrom(amount);
+        return gPonzi.balanceFrom(amount);
     }
 
-    // Staking contract holds excess sOHM
+    // Staking contract holds excess sPonzi
     function circulatingSupply() public view override returns (uint256) {
         return
-            _totalSupply.sub(balanceOf(stakingContract)).add(gOHM.balanceFrom(IERC20(address(gOHM)).totalSupply())).add(
+            _totalSupply.sub(balanceOf(stakingContract)).add(gPonzi.balanceFrom(IERC20(address(gPonzi)).totalSupply())).add(
                 IStaking(stakingContract).supplyInWarmup()
             );
     }

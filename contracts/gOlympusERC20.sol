@@ -1,14 +1,16 @@
 // SPDX-License-Identifier: MIT
+
+
 pragma solidity ^0.7.5;
 
-import "../libraries/SafeMath.sol";
-import "../libraries/Address.sol";
+import "./libraries/SafeMath.sol";
+import "./libraries/Address.sol";
 
-import "../interfaces/IsOHM.sol";
-import "../interfaces/IgOHM.sol";
-import "../types/ERC20.sol";
+import "./interfaces/IsPonzi.sol";
+import "./interfaces/IgPonzi.sol";
+import "./types/ERC20.sol";
 
-contract gOHM is IgOHM, ERC20 {
+contract gPonzi is IgPonzi, ERC20 {
     /* ========== DEPENDENCIES ========== */
 
     using Address for address;
@@ -36,8 +38,8 @@ contract gOHM is IgOHM, ERC20 {
 
     /* ========== STATE VARIABLES ========== */
 
-    IsOHM public sOHM;
-    address public approved; // minter
+    IsPonzi public sPonzi;
+    address public approved; // minter/staking contract
     bool public migrated;
 
     mapping(address => mapping(uint256 => Checkpoint)) public checkpoints;
@@ -46,31 +48,24 @@ contract gOHM is IgOHM, ERC20 {
 
     /* ========== CONSTRUCTOR ========== */
 
-    constructor(address _migrator, address _sOHM) ERC20("Governance OHM", "gOHM", 18) {
-        require(_migrator != address(0), "Zero address: Migrator");
-        approved = _migrator;
-        require(_sOHM != address(0), "Zero address: sOHM");
-        sOHM = IsOHM(_sOHM);
+    constructor(address _staking, address _sPonzi) ERC20("Governance Blue", "gPonzi", 18) {
+        require(_staking != address(0), "Zero address: Staking");
+        approved = _staking;
+        require(_sPonzi != address(0), "Zero address: sPonzi");
+        sPonzi = IsPonzi(_sPonzi);
+        migrated = true; // No migration needed for fresh deployment
     }
 
     /* ========== MUTATIVE FUNCTIONS ========== */
 
     /**
-     * @notice transfer mint rights from migrator to staking
-     * @notice can only be done once, at the time of contract migration
-     * @param _staking address
-     * @param _sOHM address
+     * @notice Transfer approved rights to staking contract (for fresh deployment)
+     * @param _staking address of the staking contract
      */
-    function migrate(address _staking, address _sOHM) external override onlyApproved {
-        require(!migrated, "Migrated");
-        migrated = true;
-
-        require(_staking != approved, "Invalid argument");
-        require(_staking != address(0), "Zero address found");
+    function setApproved(address _staking) external {
+        require(msg.sender == approved, "Only approved");
+        require(_staking != address(0), "Zero address: Staking");
         approved = _staking;
-
-        require(_sOHM != address(0), "Zero address found");
-        sOHM = IsOHM(_sOHM);
     }
 
     /**
@@ -82,7 +77,7 @@ contract gOHM is IgOHM, ERC20 {
     }
 
     /**
-        @notice mint gOHM
+        @notice mint gPonzi
         @param _to address
         @param _amount uint
      */
@@ -91,7 +86,7 @@ contract gOHM is IgOHM, ERC20 {
     }
 
     /**
-        @notice burn gOHM
+        @notice burn gPonzi
         @param _from address
         @param _amount uint
      */
@@ -102,14 +97,14 @@ contract gOHM is IgOHM, ERC20 {
     /* ========== VIEW FUNCTIONS ========== */
 
     /**
-     * @notice pull index from sOHM token
+     * @notice pull index from sPonzi token
      */
     function index() public view override returns (uint256) {
-        return sOHM.index();
+        return sPonzi.index();
     }
 
     /**
-        @notice converts gOHM amount to OHM
+        @notice converts gPonzi amount to BLUE
         @param _amount uint
         @return uint
      */
@@ -118,7 +113,7 @@ contract gOHM is IgOHM, ERC20 {
     }
 
     /**
-        @notice converts OHM amount to gOHM
+        @notice converts BLUE amount to gPonzi
         @param _amount uint
         @return uint
      */
@@ -144,7 +139,7 @@ contract gOHM is IgOHM, ERC20 {
      * @return The number of votes the account had as of the given block
      */
     function getPriorVotes(address account, uint256 blockNumber) external view returns (uint256) {
-        require(blockNumber < block.number, "gOHM::getPriorVotes: not yet determined");
+        require(blockNumber < block.number, "gPonzi::getPriorVotes: not yet determined");
 
         uint256 nCheckpoints = numCheckpoints[account];
         if (nCheckpoints == 0) {

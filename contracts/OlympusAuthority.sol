@@ -5,7 +5,7 @@ import "./interfaces/IOlympusAuthority.sol";
 
 import "./types/OlympusAccessControlled.sol";
 
-contract PonziAuthority is IOlympusAuthority, OlympusAccessControlled {
+contract LoopAuthority is IOlympusAuthority, OlympusAccessControlled {
     /* ========== STATE VARIABLES ========== */
 
     address public override governor;

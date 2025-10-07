@@ -6,11 +6,11 @@ import "./libraries/SafeMath.sol";
 
 import "./types/ERC20Permit.sol";
 
-import "./interfaces/IgPonzi.sol";
-import "./interfaces/IsPonzi.sol";
+import "./interfaces/IgLoop.sol";
+import "./interfaces/IsLoop.sol";
 import "./interfaces/IStaking.sol";
 
-contract sPonzi is IsPonzi, ERC20Permit {
+contract sLoop is IsLoop, ERC20Permit {
     /* ========== DEPENDENCIES ========== */
 
     using SafeMath for uint256;
@@ -47,7 +47,7 @@ contract sPonzi is IsPonzi, ERC20Permit {
     uint256 internal INDEX; // Index Gons - tracks rebase growth
 
     address public stakingContract; // balance used to calc rebase
-    IgPonzi public gPonzi; // additional staked supply (governance token)
+    IgLoop public gLoop; // additional staked supply (governance token)
 
     Rebase[] public rebases; // past rebase data
 
@@ -71,7 +71,7 @@ contract sPonzi is IsPonzi, ERC20Permit {
 
     /* ========== CONSTRUCTOR ========== */
 
-    constructor() ERC20("Staked Ponzi", "sPONZI", 9) ERC20Permit("Staked Ponzi") {
+    constructor() ERC20("Staked Loop", "sLoop", 9) ERC20Permit("Staked Loop") {
         initializer = msg.sender;
         _totalSupply = INITIAL_FRAGMENTS_SUPPLY;
         _gonsPerFragment = TOTAL_GONS.div(_totalSupply);
@@ -85,11 +85,11 @@ contract sPonzi is IsPonzi, ERC20Permit {
         INDEX = gonsForBalance(_index);
     }
 
-    function setgPonzi(address _gPonzi) external {
+    function setgLoop(address _gLoop) external {
         require(msg.sender == initializer, "Initializer:  caller is not initializer");
-        require(address(gPonzi) == address(0), "gPonzi:  gPonzi already set");
-        require(_gPonzi != address(0), "gPonzi:  gPonzi is not a valid contract");
-        gPonzi = IgPonzi(_gPonzi);
+        require(address(gLoop) == address(0), "gLoop:  gLoop already set");
+        require(_gLoop != address(0), "gLoop:  gLoop is not a valid contract");
+        gLoop = IgLoop(_gLoop);
     }
 
     // do this last
@@ -112,7 +112,7 @@ contract sPonzi is IsPonzi, ERC20Permit {
     /* ========== REBASE ========== */
 
     /**
-        @notice increases rPonzi supply to increase staking balances relative to profit_
+        @notice increases rLoop supply to increase staking balances relative to profit_
         @param profit_ uint256
         @return uint256
      */
@@ -220,8 +220,8 @@ contract sPonzi is IsPonzi, ERC20Permit {
         return true;
     }
 
-    // this function is called by the treasury, and informs sPonzi of changes to debt.
-    // note that addresses with debt balances cannot transfer collateralized sPonzi
+    // this function is called by the treasury, and informs sLoop of changes to debt.
+    // note that addresses with debt balances cannot transfer collateralized sLoop
     // until the debt has been repaid.
     function changeDebt(
         uint256 amount,
@@ -234,7 +234,7 @@ contract sPonzi is IsPonzi, ERC20Permit {
         } else {
             debtBalances[debtor] = debtBalances[debtor].sub(amount);
         }
-        require(debtBalances[debtor] <= balanceOf(debtor), "sPonzi: insufficient balance");
+        require(debtBalances[debtor] <= balanceOf(debtor), "sLoop: insufficient balance");
     }
 
     /* ========== INTERNAL FUNCTIONS ========== */
@@ -262,20 +262,20 @@ contract sPonzi is IsPonzi, ERC20Permit {
         return gons.div(_gonsPerFragment);
     }
 
-    // toG converts an sPonzi balance to gPonzi terms. gPonzi is an 18 decimal token. balance given is in 18 decimal format.
+    // toG converts an sLoop balance to gLoop terms. gLoop is an 18 decimal token. balance given is in 18 decimal format.
     function toG(uint256 amount) external view override returns (uint256) {
-        return gPonzi.balanceTo(amount);
+        return gLoop.balanceTo(amount);
     }
 
-    // fromG converts a gPonzi balance to sPonzi terms. sPonzi is a 9 decimal token. balance given is in 9 decimal format.
+    // fromG converts a gLoop balance to sLoop terms. sLoop is a 9 decimal token. balance given is in 9 decimal format.
     function fromG(uint256 amount) external view override returns (uint256) {
-        return gPonzi.balanceFrom(amount);
+        return gLoop.balanceFrom(amount);
     }
 
-    // Staking contract holds excess sPonzi
+    // Staking contract holds excess sLoop
     function circulatingSupply() public view override returns (uint256) {
         return
-            _totalSupply.sub(balanceOf(stakingContract)).add(gPonzi.balanceFrom(IERC20(address(gPonzi)).totalSupply())).add(
+            _totalSupply.sub(balanceOf(stakingContract)).add(gLoop.balanceFrom(IERC20(address(gLoop)).totalSupply())).add(
                 IStaking(stakingContract).supplyInWarmup()
             );
     }

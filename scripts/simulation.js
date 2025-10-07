@@ -38,15 +38,15 @@ async function main() {
     // This section uses your exact, working deployment and configuration logic.
 
     // Deploy
-    const Authority = await ethers.getContractFactory("PonziAuthority");
+    const Authority = await ethers.getContractFactory("LoopAuthority");
     const authority = await Authority.deploy(deployer.address, deployer.address, deployer.address, deployer.address);
-    const Loop = await ethers.getContractFactory("PonziERC20"); 
+    const Loop = await ethers.getContractFactory("LoopERC20"); 
     const loop = await Loop.deploy(authority.address);
-    const sLoop = await ethers.getContractFactory("sPonzi"); 
+    const sLoop = await ethers.getContractFactory("sLoop"); 
     const sLoopContract = await sLoop.deploy();
-    const gLoop = await ethers.getContractFactory("gPonzi");
+    const gLoop = await ethers.getContractFactory("gLoop");
     const gLoopContract = await gLoop.deploy(deployer.address, sLoopContract.address);
-    const Treasury = await ethers.getContractFactory("PonziTreasury");
+    const Treasury = await ethers.getContractFactory("LoopTreasury");
     const treasury = await Treasury.deploy(loop.address, "0", authority.address);
     const latestBlock = await ethers.provider.getBlock("latest");
     const Staking = await ethers.getContractFactory("OlympusStaking");
@@ -62,7 +62,7 @@ async function main() {
     await treasury.enable("8", distributor.address, ethers.constants.AddressZero);
     await staking.setDistributor(distributor.address);
     await sLoopContract.setIndex(parseUnits("1", 9));
-    await sLoopContract.setgPonzi(gLoopContract.address);
+    await sLoopContract.setgLoop(gLoopContract.address);
     await sLoopContract.initialize(staking.address, treasury.address);
     await gLoopContract.setApproved(staking.address);
     await distributor.setBounty(KEEPER_BOUNTY);

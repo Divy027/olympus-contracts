@@ -11,16 +11,16 @@ const UNISWAP_FACTORY= "0x7Ae58f10f7849cA6F5fB71b7f45CB416c9204b1e"
 const UNISWAP_V2_ROUTER_ADDRESS = "0x1689E7B1F10000AE47eBfE339a4f69dECd19F602";
 
 // --- Your Deployed Protocol Addresses ---
-const PONZI_ADDRESS = "0xcbBE47404cAb8D28BDb82085043ca4E1Db2A930F";        // ⚠️ PASTE YOUR ADDRESS
+const Loop_ADDRESS = "0xcbBE47404cAb8D28BDb82085043ca4E1Db2A930F";        // ⚠️ PASTE YOUR ADDRESS
 const TREASURY_ADDRESS = "0xE2Bf0fE73211Ef83d8021D277Ed5E8FEd076e857";      // ⚠️ PASTE YOUR ADDRESS
 const BOND_DEPOSITORY_ADDRESS = "0x86BEd80c1320806aA20189CC76830690A9a7974e"; // ⚠️ PASTE YOUR ADDRESS
 const BONDING_CALCULATOR_ADDRESS = "0x925834ACdcada4DF848A544761a12D2Ef16Cc5c9"; // ⚠️ PASTE YOUR ADDRESS
 const STAKING_DISTRIBUTOR_ADDRESS = "0x4Ab98913C4227C1da6a2E9Fe455d16097D1a9E5a"; // ⚠️ PASTE YOUR ADDRESS
 
 // --- Liquidity & Bond Configuration ---
-// This sets the initial market price. Example: 1 ETH = 1,0000 PONZI.
+// This sets the initial market price. Example: 1 ETH = 1,0000 Loop.
 const ETH_TO_ADD = "0.01";
-const PONZI_TO_ADD = "100";
+const Loop_TO_ADD = "100";
 
 // LP Bond Market Parameters
 const VESTING_TERM_DAYS = 5;
@@ -38,17 +38,17 @@ async function main() {
 
     // Get contract instances
     const weth = await ethers.getContractAt("IWETH", WETH_ADDRESS);
-    const ponzi = await ethers.getContractAt("PonziERC20", PONZI_ADDRESS);
+    const Loop = await ethers.getContractAt("LoopERC20", Loop_ADDRESS);
     const router = await ethers.getContractAt("IUniswapV2Router", UNISWAP_V2_ROUTER_ADDRESS);
     const factory = await ethers.getContractAt("IUniswapV2Factory", UNISWAP_FACTORY);
-    const treasury = await ethers.getContractAt("PonziTreasury", TREASURY_ADDRESS);
+    const treasury = await ethers.getContractAt("LoopTreasury", TREASURY_ADDRESS);
     const bondDepository = await ethers.getContractAt("OlympusBondDepositoryV2", BOND_DEPOSITORY_ADDRESS);
     const stakingDistributor = await ethers.getContractAt("Distributor", STAKING_DISTRIBUTOR_ADDRESS);
 
     // ========================================================================================
     //                         STEP 1: CREATE THE LIQUIDITY POOL
     // ========================================================================================
-    console.log("PHASE 1: Creating the PONZI-WETH Liquidity Pool...");
+    console.log("PHASE 1: Creating the Loop-WETH Liquidity Pool...");
 
     // 1a. Wrap ETH to get WETH
     const ethAmount = ethers.utils.parseEther(ETH_TO_ADD);
@@ -58,11 +58,11 @@ async function main() {
     console.log("✅ WETH received.");
 
     // 1b. Approve the Uniswap Router to spend both tokens
-    const ponziAmount = parseUnits(PONZI_TO_ADD, 9);
-    console.log(`\n-> Approving Router to spend ${formatUnits(ponziAmount, 9)} PONZI...`);
-    const approvePonziTx = await ponzi.approve(router.address, ponziAmount);
-    await approvePonziTx.wait();
-    console.log("✅ PONZI approved.");
+    const LoopAmount = parseUnits(Loop_TO_ADD, 9);
+    console.log(`\n-> Approving Router to spend ${formatUnits(LoopAmount, 9)} Loop...`);
+    const approveLoopTx = await Loop.approve(router.address, LoopAmount);
+    await approveLoopTx.wait();
+    console.log("✅ Loop approved.");
 
     console.log(`-> Approving Router to spend ${formatUnits(ethAmount, 18)} WETH...`);
     const approveWethTx = await weth.approve(router.address, ethAmount);
@@ -72,9 +72,9 @@ async function main() {
     // 1c. Add Liquidity
     console.log("\n-> Calling addLiquidity on the Router...");
     const addLiquidityTx = await router.addLiquidity(
-        ponzi.address,
+        Loop.address,
         weth.address,
-        ponziAmount,
+        LoopAmount,
         ethAmount,
         0, // amountAMin (no slippage protection on initial creation)
         0, // amountBMin
@@ -85,8 +85,8 @@ async function main() {
     console.log("✅ Liquidity added! Pool is now live.");
 
     // 1d. Get and verify the new LP Token address
-    let lpTokenAddress = await factory.getPair(ponzi.address, weth.address);
-    console.log(`\n*** Your PONZI-WETH LP Token Address is: ${lpTokenAddress} ***`);
+    let lpTokenAddress = await factory.getPair(Loop.address, weth.address);
+    console.log(`\n*** Your Loop-WETH LP Token Address is: ${lpTokenAddress} ***`);
 
     const lpToken = await ethers.getContractAt("IUniswapV2Pair", lpTokenAddress);
     const lpBalance = await lpToken.balanceOf(deployer.address);
@@ -158,7 +158,7 @@ async function main() {
         ["86400", "3600"] // Ideal pacing: 1 day, Tune frequency: 1 hour
     );
     await createMarketTx.wait();
-    console.log("✅ PONZI-WETH LP Bond Market is now live!");
+    console.log("✅ Loop-WETH LP Bond Market is now live!");
     console.log("----------------------------------------------------------\n");
     console.log("🚀 LP BOND LAUNCH COMPLETE! 🚀");
 

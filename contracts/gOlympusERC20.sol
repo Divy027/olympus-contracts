@@ -6,11 +6,11 @@ pragma solidity ^0.7.5;
 import "./libraries/SafeMath.sol";
 import "./libraries/Address.sol";
 
-import "./interfaces/IsPonzi.sol";
-import "./interfaces/IgPonzi.sol";
+import "./interfaces/IsLoop.sol";
+import "./interfaces/IgLoop.sol";
 import "./types/ERC20.sol";
 
-contract gPonzi is IgPonzi, ERC20 {
+contract gLoop is IgLoop, ERC20 {
     /* ========== DEPENDENCIES ========== */
 
     using Address for address;
@@ -38,7 +38,7 @@ contract gPonzi is IgPonzi, ERC20 {
 
     /* ========== STATE VARIABLES ========== */
 
-    IsPonzi public sPonzi;
+    IsLoop public sLoop;
     address public approved; // minter/staking contract
     bool public migrated;
 
@@ -48,11 +48,11 @@ contract gPonzi is IgPonzi, ERC20 {
 
     /* ========== CONSTRUCTOR ========== */
 
-    constructor(address _staking, address _sPonzi) ERC20("Governance Blue", "gPonzi", 18) {
+    constructor(address _staking, address _sLoop) ERC20("Governance Blue", "gLoop", 18) {
         require(_staking != address(0), "Zero address: Staking");
         approved = _staking;
-        require(_sPonzi != address(0), "Zero address: sPonzi");
-        sPonzi = IsPonzi(_sPonzi);
+        require(_sLoop != address(0), "Zero address: sLoop");
+        sLoop = IsLoop(_sLoop);
         migrated = true; // No migration needed for fresh deployment
     }
 
@@ -77,7 +77,7 @@ contract gPonzi is IgPonzi, ERC20 {
     }
 
     /**
-        @notice mint gPonzi
+        @notice mint gLoop
         @param _to address
         @param _amount uint
      */
@@ -86,7 +86,7 @@ contract gPonzi is IgPonzi, ERC20 {
     }
 
     /**
-        @notice burn gPonzi
+        @notice burn gLoop
         @param _from address
         @param _amount uint
      */
@@ -97,14 +97,14 @@ contract gPonzi is IgPonzi, ERC20 {
     /* ========== VIEW FUNCTIONS ========== */
 
     /**
-     * @notice pull index from sPonzi token
+     * @notice pull index from sLoop token
      */
     function index() public view override returns (uint256) {
-        return sPonzi.index();
+        return sLoop.index();
     }
 
     /**
-        @notice converts gPonzi amount to BLUE
+        @notice converts gLoop amount to BLUE
         @param _amount uint
         @return uint
      */
@@ -113,7 +113,7 @@ contract gPonzi is IgPonzi, ERC20 {
     }
 
     /**
-        @notice converts BLUE amount to gPonzi
+        @notice converts BLUE amount to gLoop
         @param _amount uint
         @return uint
      */
@@ -139,7 +139,7 @@ contract gPonzi is IgPonzi, ERC20 {
      * @return The number of votes the account had as of the given block
      */
     function getPriorVotes(address account, uint256 blockNumber) external view returns (uint256) {
-        require(blockNumber < block.number, "gPonzi::getPriorVotes: not yet determined");
+        require(blockNumber < block.number, "gLoop::getPriorVotes: not yet determined");
 
         uint256 nCheckpoints = numCheckpoints[account];
         if (nCheckpoints == 0) {

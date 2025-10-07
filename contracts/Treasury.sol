@@ -8,13 +8,13 @@ import "./interfaces/IOwnable.sol";
 import "./interfaces/IERC20.sol";
 import "./interfaces/IERC20Metadata.sol";
 import "./interfaces/IOHM.sol";
-import "./interfaces/IsPonzi.sol";
+import "./interfaces/IsLoop.sol";
 import "./interfaces/IBondingCalculator.sol";
 import "./interfaces/ITreasury.sol";
 
 import "./types/OlympusAccessControlled.sol";
 
-contract PonziTreasury is OlympusAccessControlled, ITreasury {
+contract LoopTreasury is OlympusAccessControlled, ITreasury {
     /* ========== DEPENDENCIES ========== */
 
     using SafeMath for uint256;
@@ -44,8 +44,8 @@ contract PonziTreasury is OlympusAccessControlled, ITreasury {
         LIQUIDITYMANAGER,
         RESERVEDEBTOR,
         REWARDMANAGER,
-        SPonzi,
-        PonziDEBTOR
+        SLoop,
+        LoopDEBTOR
     }
 
     struct Queue {
@@ -59,8 +59,8 @@ contract PonziTreasury is OlympusAccessControlled, ITreasury {
 
     /* ========== STATE VARIABLES ========== */
 
-    IOHM public immutable Ponzi;
-    IsPonzi public sPonzi;
+    IOHM public immutable Loop;
+    IsLoop public sLoop;
 
     mapping(STATUS => address[]) public registry;
     mapping(STATUS => mapping(address => bool)) public permissions;
@@ -70,7 +70,7 @@ contract PonziTreasury is OlympusAccessControlled, ITreasury {
 
     uint256 public totalReserves;
     uint256 public totalDebt;
-    uint256 public PonziDebt;
+    uint256 public LoopDebt;
 
     Queue[] public permissionQueue;
     uint256 public immutable blocksNeededForQueue;
@@ -88,12 +88,12 @@ contract PonziTreasury is OlympusAccessControlled, ITreasury {
     /* ========== CONSTRUCTOR ========== */
 
     constructor(
-        address _Ponzi,
+        address _Loop,
         uint256 _timelock,
         address _authority
     ) OlympusAccessControlled(IOlympusAuthority(_authority)) {
-        require(_Ponzi != address(0), "Zero address: Ponzi");
-        Ponzi = IOHM(_Ponzi);
+        require(_Loop != address(0), "Zero address: Loop");
+        Loop = IOHM(_Loop);
 
         timelockEnabled = false;
         initialized = false;
@@ -103,7 +103,7 @@ contract PonziTreasury is OlympusAccessControlled, ITreasury {
     /* ========== MUTATIVE FUNCTIONS ========== */
 
     /**
-     * @notice allow approved address to deposit an asset for Ponzi
+     * @notice allow approved address to deposit an asset for Loop
      * @param _amount uint256
      * @param _token address
      * @param _profit uint256
@@ -125,9 +125,9 @@ contract PonziTreasury is OlympusAccessControlled, ITreasury {
         IERC20(_token).safeTransferFrom(msg.sender, address(this), _amount);
 
         uint256 value = tokenValue(_token, _amount);
-        // mint Ponzi needed and store amount of rewards for distribution
+        // mint Loop needed and store amount of rewards for distribution
         send_ = value.sub(_profit);
-        Ponzi.mint(msg.sender, send_);
+        Loop.mint(msg.sender, send_);
 
         totalReserves = totalReserves.add(value);
 
@@ -135,7 +135,7 @@ contract PonziTreasury is OlympusAccessControlled, ITreasury {
     }
 
     /**
-     * @notice allow approved address to burn Ponzi for reserves
+     * @notice allow approved address to burn Loop for reserves
      * @param _amount uint256
      * @param _token address
      */
@@ -144,7 +144,7 @@ contract PonziTreasury is OlympusAccessControlled, ITreasury {
         require(permissions[STATUS.RESERVESPENDER][msg.sender], notApproved);
 
         uint256 value = tokenValue(_token, _amount);
-        Ponzi.burnFrom(msg.sender, value);
+        Loop.burnFrom(msg.sender, value);
 
         totalReserves = totalReserves.sub(value);
 
@@ -174,21 +174,21 @@ contract PonziTreasury is OlympusAccessControlled, ITreasury {
     }
 
     /**
-     * @notice mint new Ponzi using excess reserves
+     * @notice mint new Loop using excess reserves
      * @param _recipient address
      * @param _amount uint256
      */
     function mint(address _recipient, uint256 _amount) external override {
         require(permissions[STATUS.REWARDMANAGER][msg.sender], notApproved);
         require(_amount <= excessReserves(), insufficientReserves);
-        Ponzi.mint(_recipient, _amount);
+        Loop.mint(_recipient, _amount);
         emit Minted(msg.sender, _recipient, _amount);
     }
 
     /**
      * DEBT: The debt functions allow approved addresses to borrow treasury assets
-     * or Ponzi from the treasury, using sPonzi as collateral. This might allow an
-     * sPonzi holder to provide Ponzi liquidity without taking on the opportunity cost
+     * or Loop from the treasury, using sLoop as collateral. This might allow an
+     * sLoop holder to provide Loop liquidity without taking on the opportunity cost
      * of unstaking, or alter their backing without imposing risk onto the treasury.
      * Many of these use cases are yet to be defined, but they appear promising.
      * However, we urge the community to think critically and move slowly upon
@@ -202,8 +202,8 @@ contract PonziTreasury is OlympusAccessControlled, ITreasury {
      */
     function incurDebt(uint256 _amount, address _token) external override {
         uint256 value;
-        if (_token == address(Ponzi)) {
-            require(permissions[STATUS.PonziDEBTOR][msg.sender], notApproved);
+        if (_token == address(Loop)) {
+            require(permissions[STATUS.LoopDEBTOR][msg.sender], notApproved);
             value = _amount;
         } else {
             require(permissions[STATUS.RESERVEDEBTOR][msg.sender], notApproved);
@@ -212,13 +212,13 @@ contract PonziTreasury is OlympusAccessControlled, ITreasury {
         }
         require(value != 0, invalidToken);
 
-        sPonzi.changeDebt(value, msg.sender, true);
-        require(sPonzi.debtBalances(msg.sender) <= debtLimit[msg.sender], "Treasury: exceeds limit");
+        sLoop.changeDebt(value, msg.sender, true);
+        require(sLoop.debtBalances(msg.sender) <= debtLimit[msg.sender], "Treasury: exceeds limit");
         totalDebt = totalDebt.add(value);
 
-        if (_token == address(Ponzi)) {
-            Ponzi.mint(msg.sender, value);
-            PonziDebt = PonziDebt.add(value);
+        if (_token == address(Loop)) {
+            Loop.mint(msg.sender, value);
+            LoopDebt = LoopDebt.add(value);
         } else {
             totalReserves = totalReserves.sub(value);
             IERC20(_token).safeTransfer(msg.sender, _amount);
@@ -236,26 +236,26 @@ contract PonziTreasury is OlympusAccessControlled, ITreasury {
         require(permissions[STATUS.RESERVETOKEN][_token], notAccepted);
         IERC20(_token).safeTransferFrom(msg.sender, address(this), _amount);
         uint256 value = tokenValue(_token, _amount);
-        sPonzi.changeDebt(value, msg.sender, false);
+        sLoop.changeDebt(value, msg.sender, false);
         totalDebt = totalDebt.sub(value);
         totalReserves = totalReserves.add(value);
         emit RepayDebt(msg.sender, _token, _amount, value);
     }
 
     /**
-     * @notice allow approved address to repay borrowed reserves with Ponzi
+     * @notice allow approved address to repay borrowed reserves with Loop
      * @param _amount uint256
      */
-    function repayDebtWithPonzi(uint256 _amount) external {
+    function repayDebtWithLoop(uint256 _amount) external {
         require(
-            permissions[STATUS.RESERVEDEBTOR][msg.sender] || permissions[STATUS.PonziDEBTOR][msg.sender],
+            permissions[STATUS.RESERVEDEBTOR][msg.sender] || permissions[STATUS.LoopDEBTOR][msg.sender],
             notApproved
         );
-        Ponzi.burnFrom(msg.sender, _amount);
-        sPonzi.changeDebt(_amount, msg.sender, false);
+        Loop.burnFrom(msg.sender, _amount);
+        sLoop.changeDebt(_amount, msg.sender, false);
         totalDebt = totalDebt.sub(_amount);
-        PonziDebt = PonziDebt.sub(_amount);
-        emit RepayDebt(msg.sender, address(Ponzi), _amount, _amount);
+        LoopDebt = LoopDebt.sub(_amount);
+        emit RepayDebt(msg.sender, address(Loop), _amount, _amount);
     }
 
     /* ========== MANAGERIAL FUNCTIONS ========== */
@@ -305,8 +305,8 @@ contract PonziTreasury is OlympusAccessControlled, ITreasury {
         address _calculator
     ) external onlyGovernor {
         require(timelockEnabled == false, "Use queueTimelock");
-        if (_status == STATUS.SPonzi) {
-            sPonzi = IsPonzi(_address);
+        if (_status == STATUS.SLoop) {
+            sLoop = IsLoop(_address);
         } else {
             permissions[_status][_address] = true;
 
@@ -402,9 +402,9 @@ contract PonziTreasury is OlympusAccessControlled, ITreasury {
         require(!info.executed, "Action has already been executed");
         require(block.number >= info.timelockEnd, "Timelock not complete");
 
-        if (info.managing == STATUS.SPonzi) {
+        if (info.managing == STATUS.SLoop) {
             // 9
-            sPonzi = IsPonzi(info.toPermit);
+            sLoop = IsLoop(info.toPermit);
         } else {
             permissions[info.managing][info.toPermit] = true;
 
@@ -468,17 +468,17 @@ contract PonziTreasury is OlympusAccessControlled, ITreasury {
      * @return uint
      */
     function excessReserves() public view override returns (uint256) {
-        return totalReserves.sub(Ponzi.totalSupply().sub(totalDebt));
+        return totalReserves.sub(Loop.totalSupply().sub(totalDebt));
     }
 
     /**
-     * @notice returns Ponzi valuation of asset
+     * @notice returns Loop valuation of asset
      * @param _token address
      * @param _amount uint256
      * @return value_ uint256
      */
     function tokenValue(address _token, uint256 _amount) public view override returns (uint256 value_) {
-        value_ = _amount.mul(10**IERC20Metadata(address(Ponzi)).decimals()).div(10**IERC20Metadata(_token).decimals());
+        value_ = _amount.mul(10**IERC20Metadata(address(Loop)).decimals()).div(10**IERC20Metadata(_token).decimals());
 
         if (permissions[STATUS.LIQUIDITYTOKEN][_token]) {
             value_ = IBondingCalculator(bondCalculator[_token]).valuation(_token, _amount);
@@ -491,6 +491,6 @@ contract PonziTreasury is OlympusAccessControlled, ITreasury {
      * @return uint256
      */
     function baseSupply() external view override returns (uint256) {
-        return Ponzi.totalSupply() - PonziDebt;
+        return Loop.totalSupply() - LoopDebt;
     }
 }

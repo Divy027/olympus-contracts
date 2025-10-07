@@ -3,7 +3,7 @@ pragma solidity >=0.7.5;
 
 import "./IERC20.sol";
 
-interface IsPonzi is IERC20 {
+interface IsLoop is IERC20 {
     function rebase(uint256 blueProfit, uint256 epoch) external returns (uint256);
 
     function circulatingSupply() external view returns (uint256);

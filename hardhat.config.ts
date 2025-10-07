@@ -18,7 +18,7 @@ dotenvConfig({ path: resolve(__dirname, "./.env") });
 
 const chainIds = {
     goerli: 5,
-    hardhat: 1337,
+    hardhat: 56,
     kovan: 42,
     mainnet: 1,
     rinkeby: 4,
@@ -52,9 +52,13 @@ const config: HardhatUserConfig = {
     networks: {
         hardhat: {
             forking: {
-                url: `https://eth-mainnet.alchemyapi.io/v2/${alchemyApiKey}`,
+                url: `https://bsc-mainnet.infura.io/v3/c235679ca9984480acd9f33f5cf7510f`,
             },
             chainId: chainIds.hardhat,
+            accounts: {
+                
+                accountsBalance: "10000000000000000000000", 
+              },
         },
         // Uncomment for testing. Commented due to CI issues
         //mainnet: getChainConfig("mainnet"),
